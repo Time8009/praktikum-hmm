@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+   <meta charset="UTF-8">
+   <title>Formular</title>
+   <link rel="stylesheet" href="stylef.css">
+   <script src="scriptf.js" defer></script>
+</head>
+<body>
+    <h1>Formular</h1>
+	<form id="form" action="formular.php" method="POST" novalidate>
+		<label for="first-name">*Vorname:</label>
+		<input type="text" name="firstName" id="first-name">
+		<span class="error-msg" id="error-first-name"></span><br><br>
+		
+		<label for="last-name">*Nachname:</label>
+		<input type="text" name="lastName" id="last-name">
+		<span class="error-msg" id="error-last-name"></span><br><br>
+		
+		<label for="birthdate">Geburtsdatum:</label>
+		<input type="date" name="birthdate" id="birthdate"><br><br>
+		<span class="error-msg" id="error-birthdate"></span><br><br>
+		
+		<label for="email">*Email:</label>
+		<input type="email" name="email" id="email">
+		<span class="error-msg" id="error-email"></span><br><br>
+		
+		<label for="address">Adresse:</label>
+		<input type="text" name="address" id="address"><br><br>
+		
+		<label for="zip-code">PLZ:</label>
+		<input type="text" name="zipCode" id="zip">
+		<span class="error-msg" id="error-zip"></span><br><br>
+		
+		<label for="city">Ort:</label>
+		<input type="text" name="city" id="city">
+		<span class="error-msg" id="error-city"></span><br><br>
+		
+		<label for="subject">*Betreff:</label>
+		<input type="text" name="subject" id="subject">
+		<span class="error-msg" id="error-subject"></span><br><br>
+		
+		<p class="message-label">Nachricht:</p>
+		<textarea id="message" name="message" rows="5" cols="40" placeholder="Schreiben Sie hier Ihre Nachricht..."></textarea><br><br>
+		
+		<input type="submit" value="Absenden" id="submit-btn">
+	</form>
+</body>
+</html>
