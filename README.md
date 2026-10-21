@@ -1,4 +1,4 @@
-# 📂 Dev & Infrastructure Lab
+# 📂 Webform
 
 > My Docker Project to host a form to receive messages
 
@@ -22,7 +22,7 @@ My Project for my internship at HMM Deutschland GmbH. It contains my first versi
 ```text
 /
 ├── v1 # HTML, CSS, JavaScript, PHP, Mysql
-└── v2 # (Work in Progress)
+└── v2 # Laravel Framework
 ```
 All hosted in Docker
 
