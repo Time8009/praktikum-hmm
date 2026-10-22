@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Controller;
 
+Route::redirect('/', '/formular');
+
 Route::get('/formular', [Controller::class, 'create'])->name('formular.create');
 Route::post('/formular', [Controller::class, 'store'])->name('formular.store');
 

@@ -19,6 +19,7 @@ class RoutesProvider extends ServiceProvider
             /** @var Request $this */
             return $this->validate([
                 'id'        => 'nullable|int',
+                'oid'       => 'nullable|int',
                 'firstName' => 'required|string|min:2',
                 'lastName'  => 'required|string|min:2',
                 'birthdate' => 'nullable|date',

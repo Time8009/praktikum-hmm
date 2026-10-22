@@ -18,9 +18,8 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-/** Bootstrap any application services. */
     public function boot(): void
     {
-        $this->app->register(RoutesProvider::class);
+        //
     }
 }

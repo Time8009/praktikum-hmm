@@ -39,7 +39,7 @@ class Controller_rest
     {
         $validated = $request->validateFormular();
 
-        $id = $request->input('oid');
+        $id = $request->input('oid') ?? $request->input('id');
 
         $entry = Formular::findOrFail($id);
 

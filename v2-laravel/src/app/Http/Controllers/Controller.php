@@ -16,9 +16,8 @@ class Controller
     {
         $validated = $request->validate([
             'firstName' => 'required|min:2',
-            
             'lastName'  => 'required|min:2',
-            'birthdate' => 'nullable|date|before:-12 years',
+            'birthdate' => 'nullable|date|before_or_equal:today',
             'email'     => 'required|email',
             'address'   => 'nullable|string',
             'zipCode'   => 'nullable|regex:/^[0-9]{5}$/',
@@ -39,7 +38,7 @@ class Controller
             'message'    => $validated['message'] ?? null,
         ]);
 
-        return redirect('/formular_viewer.formular_viewer')->with('success', 'Eintrag erfolgreich gespeichert!');
+        return redirect('/formular_viewer')->with('success', 'Eintrag erfolgreich gespeichert!');
     }
 
     public function index()
@@ -106,11 +105,11 @@ class Controller
     public function truncate(Request $request)
     {
         if ($request->input('admin_password') !== 'php!?*') {
-            return redirect('/formular_viewer.formular_viewer')->with('error', 'Falsches Passwort!');
+            return redirect('/formular_viewer')->with('error', 'Falsches Passwort!');
         }
 
         Formular::truncate();
 
-        return redirect('/formular_viewer.formular_viewer')->with('success', 'Tabelle zurückgesetzt!');
+        return redirect('/formular_viewer')->with('success', 'Tabelle zurückgesetzt!');
     }
 }

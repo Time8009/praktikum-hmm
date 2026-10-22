@@ -10,10 +10,12 @@ class ApiKeyAuth
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $expectedKey = env('API_KEY');
+        $request->headers->set('Accept', 'application/json');
+
+        $expectedKey = config('services.api.key') ?: env('API_KEY');
         $providedKey = $request->header('x-api-key') ?? $request->header('X-API-KEY');
 
-        if (!$providedKey || $providedKey !== $expectedKey) {
+        if (!$expectedKey || !$providedKey || $providedKey !== $expectedKey) {
             return response()->json([
                 'success' => false,
                 'message' => 'Nicht autorisiert. Ungültiger oder fehlender API-Schlüssel.'

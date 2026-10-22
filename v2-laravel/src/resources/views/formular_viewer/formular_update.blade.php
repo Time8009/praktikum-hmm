@@ -9,10 +9,10 @@
 <body>
     <h1>Formular bearbeiten</h1>
 
-    @if (count($errors) > 0)
+    @if ($errors->any())
         <div style="color: red; margin-bottom: 15px;">
             <ul>
-                @foreach ($errors as $error)
+                @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
