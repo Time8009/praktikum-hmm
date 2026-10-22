@@ -16,6 +16,7 @@ class Controller
     {
         $validated = $request->validate([
             'firstName' => 'required|min:2',
+            
             'lastName'  => 'required|min:2',
             'birthdate' => 'nullable|date|before:-12 years',
             'email'     => 'required|email',

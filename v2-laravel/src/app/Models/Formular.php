@@ -8,6 +8,8 @@ class Formular extends Model
 {
     protected $table = 'tbl_formular';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'first_name',
         'last_name',
