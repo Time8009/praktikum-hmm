@@ -19,9 +19,16 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function checkField(input, errorSpan, type) 
 {
+    if (!input) return true;
     const val = input.value.trim();
 
-    if (val === "" && type !== "zip" && type !== "city" && type !== "birthdate") 
+    if (type === "subject" && val === "")
+    {
+        input.classList.add("is-invalid");
+        errorSpan.textContent = "* Bitte wählen Sie einen Betreff aus!";
+        return false;
+    }
+    else if (val === "" && type !== "zip" && type !== "city" && type !== "birthdate") 
     {
         input.classList.add("is-invalid");
         errorSpan.textContent = "* Dieses Feld ist ein Pflichtfeld";
@@ -73,6 +80,11 @@ firstName.addEventListener("blur", function()
 lastName.addEventListener("blur", function() 
 {
     checkField(lastName, errorLastName, "lastName");
+});
+
+subject.addEventListener("change", function() 
+{
+    checkField(subject, errorSubject, "subject");
 });
 
 subject.addEventListener("blur", function() 

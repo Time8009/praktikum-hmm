@@ -50,7 +50,14 @@
         <span class="error-msg" id="error-city"></span><br><br>
         
         <label for="subject">*Betreff:</label>
-        <input type="text" name="subject" id="subject" value="{{ old('subject') }}">
+        <select name="subject" id="subject">
+            <option value="" disabled {{ old('subject') ? '' : 'selected' }}>-- Bitte Thema wählen --</option>
+            @foreach ($subjects as $s)
+                <option value="{{ $s->id }}" {{ old('subject') == $s->id ? 'selected' : '' }}>
+                    {{ $s->name }}
+                </option>
+            @endforeach
+        </select>
         <span class="error-msg" id="error-subject"></span><br><br>
         
         <p class="message-label">Nachricht:</p>

@@ -33,16 +33,16 @@
             </tr>
             @forelse ($entries as $row)
             <tr>
-                <td><input type="radio" name="selected" value="{{ $row->id }}"></td>
-                <td>{{ $row->id }}</td>
-                <td>{{ $row->first_name }}</td>
-                <td>{{ $row->last_name }}</td>
-                <td>{{ $row->birthdate ? date('d.m.Y', strtotime($row->birthdate)) : '-' }}</td>
-                <td>{{ $row->email }}</td>
-                <td>{{ $row->address }}</td>
-                <td>{{ $row->zip_code }}</td>
-                <td>{{ $row->city }}</td>
-                <td>{{ $row->subject }}</td>
+                <td><input type="radio" name="selected" value="{{ $row->form_id }}"></td>
+                <td>{{ $row->form_id }}</td>
+                <td>{{ $row->user->first_name ?? '-' }}</td>
+                <td>{{ $row->user->last_name ?? '-' }}</td>
+                <td>{{ !empty($row->user->birthdate) ? date('d.m.Y', strtotime($row->user->birthdate)) : '-' }}</td>
+                <td>{{ $row->user->email ?? '-' }}</td>
+                <td>{{ $row->user->adress ?? '-' }}</td>
+                <td>{{ $row->user->zip_code ?? '-' }}</td>
+                <td>{{ $row->user->city ?? '-' }}</td>
+                <td>{{ $row->subject->name ?? '-' }}</td>
                 <td>{!! nl2br(e($row->message)) !!}</td>
             </tr>
             @empty

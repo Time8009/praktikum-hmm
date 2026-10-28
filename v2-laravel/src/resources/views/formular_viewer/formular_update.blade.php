@@ -23,39 +23,46 @@
         <p style="color: red;">{{ session('error') }}</p>
     @endif
 
-    <form id="form" action="/formular/{{ $entry->id }}" method="POST" novalidate>
+    <form id="form" action="/formular/{{ $entry->form_id }}" method="POST" novalidate>
         @csrf
         @method('PUT')
 
         <label for="first-name">*Vorname:</label>
-        <input type="text" name="firstName" id="first-name" value="{{ old('firstName', $entry->first_name) }}">
+        <input type="text" name="firstName" id="first-name" value="{{ old('firstName', $entry->user->first_name ?? '') }}">
         <span class="error-msg" id="error-first-name"></span><br><br>
         
         <label for="last-name">*Nachname:</label>
-        <input type="text" name="lastName" id="last-name" value="{{ old('lastName', $entry->last_name) }}">
+        <input type="text" name="lastName" id="last-name" value="{{ old('lastName', $entry->user->last_name ?? '') }}">
         <span class="error-msg" id="error-last-name"></span><br><br>
         
         <label for="birthdate">Geburtsdatum:</label>
-        <input type="date" name="birthdate" id="birthdate" value="{{ old('birthdate', $entry->birthdate) }}"><br><br>
+        <input type="date" name="birthdate" id="birthdate" value="{{ old('birthdate', !empty($entry->user->birthdate) ? date('Y-m-d', strtotime($entry->user->birthdate)) : '') }}"><br><br>
         <span class="error-msg" id="error-birthdate"></span><br><br>
         
         <label for="email">*Email:</label>
-        <input type="email" name="email" id="email" value="{{ old('email', $entry->email) }}">
+        <input type="email" name="email" id="email" value="{{ old('email', $entry->user->email ?? '') }}">
         <span class="error-msg" id="error-email"></span><br><br>
         
         <label for="address">Adresse:</label>
-        <input type="text" name="address" id="address" value="{{ old('address', $entry->address) }}"><br><br>
+        <input type="text" name="address" id="address" value="{{ old('address', $entry->user->adress ?? '') }}"><br><br>
         
         <label for="zip-code">PLZ:</label>
-        <input type="text" name="zipCode" id="zip" value="{{ old('zipCode', $entry->zip_code) }}">
+        <input type="text" name="zipCode" id="zip" value="{{ old('zipCode', $entry->user->zip_code ?? '') }}">
         <span class="error-msg" id="error-zip"></span><br><br>
         
         <label for="city">Ort:</label>
-        <input type="text" name="city" id="city" value="{{ old('city', $entry->city) }}">
+        <input type="text" name="city" id="city" value="{{ old('city', $entry->user->city ?? '') }}">
         <span class="error-msg" id="error-city"></span><br><br>
         
         <label for="subject">*Betreff:</label>
-        <input type="text" name="subject" id="subject" value="{{ old('subject', $entry->subject) }}">
+        <select name="subject" id="subject">
+            <option value="" disabled>-- Bitte Thema wählen --</option>
+            @foreach ($subjects as $s)
+                <option value="{{ $s->id }}" {{ old('subject', $entry->subject_id) == $s->id ? 'selected' : '' }}>
+                    {{ $s->name }}
+                </option>
+            @endforeach
+        </select>
         <span class="error-msg" id="error-subject"></span><br><br>
         
         <p class="message-label">Nachricht:</p>

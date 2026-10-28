@@ -1,45 +1,54 @@
 <?php
 
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Routing\Router;
+use App\Http\Controllers\ControllerAnswer;
+use App\Http\Controllers\ControllerFormular;
+use App\Http\Controllers\ControllerSubject;
+use App\Http\Controllers\ControllerUser;
+use App\Http\Middleware\JwtAuth;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller_rest;
-use App\Http\Middleware\ApiKeyAuth;
+use Illuminate\Support\Facades\Route;
 
-class RoutesProvider extends ServiceProvider
-{
-    /**
-     * Define your route model bindings, pattern filters, and other route configuration.
-     */
-    public function boot(Router $router): void
-    {
-        Request::macro('validateFormular', function () {
-            /** @var Request $this */
-            return $this->validate([
-                'id'        => 'nullable|int',
-                'oid'       => 'nullable|int',
-                'firstName' => 'required|string|min:2',
-                'lastName'  => 'required|string|min:2',
-                'birthdate' => 'nullable|date',
-                'email'     => 'required|email',
-                'address'   => 'nullable|string',
-                'zipCode'   => 'nullable|string',
-                'city'      => 'nullable|string',
-                'subject'   => 'required|string',
-                'message'   => 'nullable|string',
-            ]);
-        });
+Route::post('/login', [ControllerUser::class, 'login']);
+Route::post('/register', [ControllerUser::class, 'store']);
 
-        $router
-            ->controller(Controller_rest::class)
-            ->middleware(ApiKeyAuth::class)
-            ->group(function (Router $router) {
-                $router->get('/find/{id}', 'find');
-                $router->post('/create', 'store');
-                $router->post('/update', 'update');
-                $router->delete('/delete/{id}', 'destroy');
-            });
-    }
-}
+Route::middleware(JwtAuth::class)->group(function () {
+    Route::get('/formular', [ControllerFormular::class, 'index']);
+    Route::get('/formular/{id}', [ControllerFormular::class, 'show']);
+    Route::post('/formular', [ControllerFormular::class, 'store']);
+    Route::put('/formular/{id}', [ControllerFormular::class, 'update']);
+    Route::delete('/formular/{id}', [ControllerFormular::class, 'delete']);
+
+    Route::get('/formularall', function (Request $request, ControllerFormular $controller) {
+        $request->merge(['all' => true]);
+        return $controller->index($request);
+    });
+    Route::get('/formularall/{id}', function (Request $request, int $id, ControllerFormular $controller) {
+        $request->merge(['all' => true]);
+        return $controller->show($request, $id);
+    });
+
+    Route::get('/user', [ControllerUser::class, 'index']);
+    Route::get('/user/{id}', [ControllerUser::class, 'show']);
+    Route::put('/user/{id}', [ControllerUser::class, 'update']);
+    Route::delete('/user/{id}', [ControllerUser::class, 'delete']);
+    Route::get('/user/{id}/formular', [ControllerUser::class, 'formulars']);
+
+    Route::get('/subject', [ControllerSubject::class, 'index']);
+    Route::get('/subject/{id}', [ControllerSubject::class, 'show']);
+
+    Route::get('/answer', [ControllerAnswer::class, 'index']);
+    Route::get('/answer/{id}', [ControllerAnswer::class, 'show']);
+});
+
+Route::middleware(JwtAuth::class . ':A')->group(function () {
+    Route::put('/admin/{id}', [ControllerUser::class, 'admin']);
+    Route::put('/user/{id}', [ControllerUser::class, 'user']);
+
+    Route::post('/subject', [ControllerSubject::class, 'store']);
+    Route::put('/subject/{id}', [ControllerSubject::class, 'update']);
+    Route::delete('/subject/{id}', [ControllerSubject::class, 'delete']);
+
+    Route::post('/answer', [ControllerAnswer::class, 'store']);
+    Route::put('/answer/{id}', [ControllerAnswer::class, 'update']);
+    Route::delete('/answer/{id}', [ControllerAnswer::class, 'delete']);
+});

@@ -2,48 +2,49 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $table = 'tbl_user';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'role',
         'email',
-        'password',
+        'birthdate',
+        'adress',
+        'zip_code',
+        'city',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'birthdate' => 'date',
         ];
+    }
+
+    public static function validationRules(): array
+    {
+        return [
+            'first_name' => 'required|string|min:2|max:50',
+            'last_name'  => 'nullable|string|min:2|max:50',
+            'role'       => 'sometimes|in:A,U',
+            'email'      => 'required|email|max:100',
+            'birthdate'  => 'nullable|date',
+            'adress'     => 'nullable|string|max:100',
+            'zip_code'   => 'nullable|string|max:5',
+            'city'       => 'nullable|string|max:100',
+        ];
+    }
+
+    public function formulars(): HasMany
+    {
+        return $this->hasMany(Formular::class, 'user_id', 'id');
     }
 }
