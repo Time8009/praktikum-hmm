@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\File;
 use App\Models\Formular;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +16,6 @@ class ControllerFormular extends Controller
 
         $query = Formular::query();
 
-        // Wenn all=true gesetzt ist, lade immer alle Formulare mit allen Relationen
         if ($request->boolean('all')) {
             return response()->json(
                 $query->with([
@@ -25,7 +26,6 @@ class ControllerFormular extends Controller
             );
         }
 
-        // Standard (/formular): U sieht nur eigene, A sieht alle
         if ($auth['role'] !== 'A') {
             $query->where('user_id', $auth['id']);
         }
@@ -39,7 +39,6 @@ class ControllerFormular extends Controller
 
         $query = Formular::query();
 
-        // Wenn all=true gesetzt ist, zeige das Formular mit Relationen ohne User-Sperre
         if ($request->boolean('all')) {
             $entry = $query->with([
                 'user:id,first_name,last_name,birthdate,email,adress,zip_code,city',
@@ -50,7 +49,6 @@ class ControllerFormular extends Controller
             return response()->json($entry);
         }
 
-        // Standard (/formular/{id}): U darf nur eigenes Formular sehen
         $entry = $query->findOrFail((int)$id);
 
         if ($auth['role'] !== 'A' && (int)$entry->user_id !== (int)$auth['id']) {
@@ -66,21 +64,38 @@ class ControllerFormular extends Controller
 
         $validated = $request->validate([
             'subject_id' => 'required|integer|exists:tbl_subject,id',
-            'message'    => 'nullable|string',
-            'user_id'    => 'sometimes|integer|exists:tbl_user,id',
+            'message'    => 'required|string',
+            'file'       => 'nullable|file|max:20480',
         ]);
 
-        $userId = ($auth['role'] === 'A' && !empty($validated['user_id']))
-            ? $validated['user_id']
-            : $auth['id'];
-
-        $entry = Formular::create([
-            'user_id'    => $userId,
+        $formular = Formular::create([
+            'user_id'    => $auth['id'],
             'subject_id' => $validated['subject_id'],
-            'message'    => $validated['message'] ?? '',
+            'message'    => $validated['message'],
         ]);
 
-        return response()->json($entry, 201);
+        if ($request->hasFile('file') && $request->file('file')->isValid()) {
+            $uploadedFile = $request->file('file');
+
+            $storedPath = Storage::disk('s3')->putFile('formular-attachments', $uploadedFile);
+
+            if (!$storedPath) {
+                return response()->json(['error' => 'Fehler beim Hochladen auf den S3-Speicher'], 500);
+            }
+
+            File::create([
+                'form_id'       => $formular->form_id,
+                'response_id'   => null,
+                'user_id'       => $auth['id'],
+                'name'          => $uploadedFile->getClientOriginalName(),
+                'path'          => $storedPath,
+                'disk'          => 's3',
+                'mime_type'     => $uploadedFile->getClientMimeType(),
+                'size_in_bytes' => $uploadedFile->getSize(),
+            ]);
+        }
+
+        return response()->json($formular->load('files'), 201);
     }
 
     public function update(Request $request, $id): JsonResponse
@@ -107,7 +122,7 @@ class ControllerFormular extends Controller
         return response()->json($entry);
     }
 
-    public function destroy(Request $request, $id): JsonResponse
+    public function delete(Request $request, $id): JsonResponse
     {
         $auth = $request->attributes->get('auth_user');
         $entry = Formular::findOrFail((int)$id);
@@ -123,4 +138,6 @@ class ControllerFormular extends Controller
             'message' => "Formular {$id} gelöscht."
         ]);
     }
+
+    
 }

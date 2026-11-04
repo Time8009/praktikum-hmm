@@ -14,6 +14,15 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
 
+/storage/app/*
+!/storage/app/.gitignore
+!/storage/app/public/.gitignore
+
+/docker/mysql-data/
+/docker/zenko-data/
+*.sql
+*.sqlite
+
 .idea/
 .vscode/
 *.suo

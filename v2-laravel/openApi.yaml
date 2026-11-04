@@ -1,0 +1,917 @@
+openapi: 3.0.3
+info:
+  title: Contact Form API
+  description: >
+    REST API for a contact form ticket system with user management, subjects,
+    replies, and S3 file attachments.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost
+
+security:
+  - bearerAuth: []
+
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterInput'
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /login:
+    post:
+      summary: User login (obtain JWT token)
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: max@example.com
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+
+  /user:
+    get:
+      summary: Retrieve user list
+      description: Admins see all users; regular users only see their own profile.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /user/{id}:
+    get:
+      summary: Retrieve a single user
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update user profile
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+      responses:
+        '200':
+          description: Profile successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      summary: Delete user
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: User deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /user/{id}/formular:
+    get:
+      summary: Retrieve all forms of a specific user (Admin only)
+      tags:
+        - Admin Actions
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: List of user's forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formular'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tadmin/{id}:
+    put:
+      summary: Set user role to Admin ('A')
+      tags:
+        - Admin Actions
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Role successfully updated to Admin
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tuser/{id}:
+    put:
+      summary: Set user role to User ('U')
+      tags:
+        - Admin Actions
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Role successfully updated to User
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /subject:
+    get:
+      summary: List all subject options
+      tags:
+        - Subjects
+      responses:
+        '200':
+          description: List of all subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subject'
+
+    post:
+      summary: Create a new subject (Admin only)
+      tags:
+        - Subjects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Hardware Support
+                description:
+                  type: string
+                  example: Questions regarding PCs, monitors, and peripherals
+      responses:
+        '201':
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /subject/{id}:
+    get:
+      summary: Retrieve a single subject
+      tags:
+        - Subjects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+
+    put:
+      summary: Edit a subject (Admin only)
+      tags:
+        - Subjects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Subject updated
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      summary: Delete a subject (Admin only)
+      tags:
+        - Subjects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /formular:
+    get:
+      summary: Retrieve own forms
+      tags:
+        - Forms
+      responses:
+        '200':
+          description: List of own forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formular'
+
+    post:
+      summary: Create a new form (includes optional S3 file upload)
+      tags:
+        - Forms
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - subject_id
+                - message
+              properties:
+                subject_id:
+                  type: integer
+                  example: 1
+                message:
+                  type: string
+                  example: My monitor turns off after 5 minutes.
+                file:
+                  type: string
+                  format: binary
+                  description: Optional file attachment (max 20 MB)
+      responses:
+        '201':
+          description: Form created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formular'
+
+  /formularall:
+    get:
+      summary: Retrieve all forms system-wide (Admin only)
+      tags:
+        - Forms
+      responses:
+        '200':
+          description: List of all existing forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formular'
+
+  /formular/{id}:
+    get:
+      summary: Retrieve a single form with replies and attachments
+      tags:
+        - Forms
+      parameters:
+        - $ref: '#/components/parameters/FormIdParam'
+      responses:
+        '200':
+          description: Form details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formular'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    put:
+      summary: Edit form message
+      tags:
+        - Forms
+      parameters:
+        - $ref: '#/components/parameters/FormIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: Updated details regarding the form...
+      responses:
+        '200':
+          description: Form updated
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      summary: Delete form (Admin or author)
+      tags:
+        - Forms
+      parameters:
+        - $ref: '#/components/parameters/FormIdParam'
+      responses:
+        '200':
+          description: Form deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /formularall/{id}:
+    get:
+      summary: Retrieve form via Admin endpoint
+      tags:
+        - Forms
+      parameters:
+        - $ref: '#/components/parameters/FormIdParam'
+      responses:
+        '200':
+          description: Form details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formular'
+
+  /answer:
+    get:
+      summary: Retrieve replies (optionally filtered by form)
+      tags:
+        - Replies
+      parameters:
+        - name: form_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter replies by form ID
+      responses:
+        '200':
+          description: List of replies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Answer'
+
+    post:
+      summary: Reply to a form (includes optional file upload)
+      tags:
+        - Replies
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - form_id
+                - message
+              properties:
+                form_id:
+                  type: integer
+                  example: 1
+                message:
+                  type: string
+                  example: Please check if the HDMI cable is connected.
+                file:
+                  type: string
+                  format: binary
+                  description: Optional file attachment
+      responses:
+        '201':
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /answer/{id}:
+    get:
+      summary: Retrieve a single reply
+      tags:
+        - Replies
+      parameters:
+        - $ref: '#/components/parameters/AnswerIdParam'
+      responses:
+        '200':
+          description: Reply details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+
+    put:
+      summary: Edit reply (ONLY original author)
+      description: Administrators cannot modify message contents of other users.
+      tags:
+        - Replies
+      parameters:
+        - $ref: '#/components/parameters/AnswerIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: Corrected reply message...
+      responses:
+        '200':
+          description: Reply successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      summary: Delete reply (Author or Admin)
+      tags:
+        - Replies
+      parameters:
+        - $ref: '#/components/parameters/AnswerIdParam'
+      responses:
+        '200':
+          description: Reply and associated files successfully deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /file:
+    get:
+      summary: Retrieve file list
+      description: Regular users only see their own uploads; Admins see all files.
+      tags:
+        - Files
+      parameters:
+        - name: form_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter by form ID
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileMetadata'
+
+  /file/{id}:
+    get:
+      summary: Retrieve file metadata
+      description: Regular users only see their own uploads; Admins see all files.
+      tags:
+        - Files
+      parameters:
+        - $ref: '#/components/parameters/FileIdParam'
+      responses:
+        '200':
+          description: Metadata details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete file from S3 and database (Uploader or Admin)
+      tags:
+        - Files
+      parameters:
+        - $ref: '#/components/parameters/FileIdParam'
+      responses:
+        '200':
+          description: File successfully deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /file/{id}/download:
+    get:
+      summary: Download file from S3
+      description: >
+        Streams physical file from internal S3 storage to the client.
+        Allowed for the uploader, form owner, and administrators.
+      tags:
+        - Files
+      parameters:
+        - $ref: '#/components/parameters/FileIdParam'
+      responses:
+        '200':
+          description: File stream
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="04_Operation_Description.pdf"
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /file/user/{id}:
+    get:
+      summary: Retrieve all files of a specific user (Admin only)
+      tags:
+        - Files
+        - Admin Actions
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: List of all files uploaded by this user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileMetadata'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Provide your JWT token here (enter only the token string itself;
+        Swagger prefixes 'Bearer ' automatically).
+
+  parameters:
+    UserIdParam:
+      name: id
+      in: path
+      required: true
+      description: ID of the user
+      schema:
+        type: integer
+    FormIdParam:
+      name: id
+      in: path
+      required: true
+      description: ID of the form
+      schema:
+        type: integer
+    AnswerIdParam:
+      name: id
+      in: path
+      required: true
+      description: ID of the reply
+      schema:
+        type: integer
+    FileIdParam:
+      name: id
+      in: path
+      required: true
+      description: ID of the file
+      schema:
+        type: integer
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not Found
+    Forbidden:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Access denied
+    ValidationError:
+      description: Input validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: Max
+        last_name:
+          type: string
+          example: Mustermann
+        email:
+          type: string
+          format: email
+          example: max@example.com
+        role:
+          type: string
+          enum: [A, U]
+          description: "A = Admin, U = User"
+          example: U
+        birthdate:
+          type: string
+          format: date
+          example: 2000-01-15
+        adress:
+          type: string
+          example: Musterstraße 1
+        zip_code:
+          type: string
+          example: '47441'
+        city:
+          type: string
+          example: Moers
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserRegisterInput:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+      properties:
+        first_name:
+          type: string
+          example: Max
+        last_name:
+          type: string
+          example: Mustermann
+        email:
+          type: string
+          format: email
+          example: max@example.com
+        birthdate:
+          type: string
+          format: date
+          example: 2000-01-15
+        adress:
+          type: string
+          example: Musterstraße 1
+        zip_code:
+          type: string
+          example: '47441'
+        city:
+          type: string
+          example: Moers
+
+    UserUpdateInput:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        adress:
+          type: string
+        zip_code:
+          type: string
+        city:
+          type: string
+
+    Subject:
+      type: object
+      properties:
+        subject_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Hardware Support
+        description:
+          type: string
+          example: Assistance with peripherals and PCs
+        created_at:
+          type: string
+          format: date-time
+
+    Formular:
+      type: object
+      properties:
+        form_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        subject_id:
+          type: integer
+          example: 2
+        message:
+          type: string
+          example: Monitor remains black
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Answer'
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+
+    Answer:
+      type: object
+      properties:
+        answer_id:
+          type: integer
+          example: 1
+        form_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 2
+        message:
+          type: string
+          example: Please check the power cable.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+
+    FileMetadata:
+      type: object
+      properties:
+        file_id:
+          type: integer
+          example: 1
+        form_id:
+          type: integer
+          nullable: true
+          example: 1
+        response_id:
+          type: integer
+          nullable: true
+          example: null
+        user_id:
+          type: integer
+          description: ID of the uploader
+          example: 1
+        name:
+          type: string
+          example: 04_Operation_Description.pdf
+        path:
+          type: string
+          example: formular-attachments/GJEskupyFKopbXVrqDVsMMNlvlD6f2QvbVzsFTG2.pdf
+        disk:
+          type: string
+          example: s3
+        mime_type:
+          type: string
+          example: application/pdf
+        size_in_bytes:
+          type: integer
+          example: 1048576
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'

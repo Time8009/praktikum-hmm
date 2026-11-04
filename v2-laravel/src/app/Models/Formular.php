@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Formular extends Model
 {
+    use HasFactory;
+
     protected $table = 'tbl_formular';
     protected $primaryKey = 'form_id';
     public $timestamps = true;
@@ -16,15 +20,6 @@ class Formular extends Model
         'subject_id',
         'message',
     ];
-
-    public static function validationRules(): array
-    {
-        return [
-            'id'      => 'nullable|integer',
-            'oid'     => 'nullable|integer',
-            'message' => 'required|string',
-        ];
-    }
 
     public function user(): BelongsTo
     {
@@ -36,8 +31,13 @@ class Formular extends Model
         return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
-    public function answers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function answers(): HasMany
     {
         return $this->hasMany(Answer::class, 'form_id', 'form_id');
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(File::class, 'form_id', 'form_id');
     }
 }

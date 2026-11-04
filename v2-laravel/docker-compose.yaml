@@ -20,6 +20,21 @@ services:
         condition: service_healthy
     networks:
       - laravel
+
+  s3:
+    image: zenko/cloudserver:latest
+    container_name: laravel_s3
+    restart: unless-stopped
+    environment:
+      - S3BACKEND=mem
+      - SCALITY_ACCESS_KEY_ID=minioadmin
+      - SCALITY_SECRET_ACCESS_KEY=minioadmin
+      - ENDPOINT=s3
+    ports:
+      - "9000:8000"
+    networks:
+      - laravel
+
   nginx:
     image: nginx:stable-alpine
     container_name: laravel_nginx

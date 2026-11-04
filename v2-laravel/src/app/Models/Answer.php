@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Answer extends Model
 {
@@ -16,26 +17,22 @@ class Answer extends Model
 
     protected $fillable = [
         'form_id',
+        'user_id',
         'message',
     ];
 
-    public static function validationRules(): array
+    public function user(): BelongsTo
     {
-        return [
-            'form_id' => 'required|integer|exists:tbl_formular,form_id',
-            'message' => 'required|string|min:1',
-        ];
-    }
-
-    public static function updateRules(): array
-    {
-        return [
-            'message' => 'required|string|min:1',
-        ];
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function formular(): BelongsTo
     {
         return $this->belongsTo(Formular::class, 'form_id', 'form_id');
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(File::class, 'response_id', 'answer_id');
     }
 }
